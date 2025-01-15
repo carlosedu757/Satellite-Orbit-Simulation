@@ -1,115 +1,71 @@
-import sys
+import pygame
 import math
-from OpenGL.GL import *
-from OpenGL.GLUT import *
-from OpenGL.GLU import *
+import sys
 
-# Inicializar variáveis globais
-window_width = 800
-window_height = 600
-satellite_angle = 0.0
-orbit_points = []
-show_orbit = True
+# Configurações da tela
+WIDTH, HEIGHT = 800, 600
+BLACK = (0, 0, 0)
+WHITE = (255, 255, 255)
+SATELLITE_COLOR = (255, 0, 0)
+PLANET_COLOR = (0, 0, 255)
 
-def init():
-    glEnable(GL_DEPTH_TEST)
-    glClearColor(0.0, 0.0, 0.0, 1.0)
+# Inicializar Pygame
+pygame.init()
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("Simulação de Órbita do Satélite")
+clock = pygame.time.Clock()
 
-def calculate_orbit(radius, steps=360):
-    """Calcula os pontos da órbita circular"""
-    global orbit_points
-    orbit_points = [
-        (math.cos(math.radians(angle)) * radius, math.sin(math.radians(angle)) * radius)
-        for angle in range(steps)
-    ]
+# Parâmetros da órbita
+center_x, center_y = WIDTH // 2, HEIGHT // 2  # Centro do planeta
+radius = 200  # Raio da órbita
+angle = 0  # Ângulo inicial
+angular_velocity = 0.01  # Velocidade angular
 
-def draw_planet():
-    """Desenha o planeta no centro."""
-    glColor3f(0.0, 0.5, 1.0)
-    glPushMatrix()
-    glutSolidSphere(0.1, 50, 50)
-    glPopMatrix()
+# Loop principal
+running = True
+show_orbit_path = True
+orbit_points = []  # Armazena os pontos da órbita para desenhar a linha
 
-def draw_satellite():
-    """Desenha o satélite em órbita."""
-    global satellite_angle
+while running:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+        elif event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_SPACE:  # Tecla para alternar a exibição da órbita
+                show_orbit_path = not show_orbit_path
 
-    # Calcular posição do satélite
-    radius = 0.5
-    x = math.cos(math.radians(satellite_angle)) * radius
-    y = math.sin(math.radians(satellite_angle)) * radius
+    # Atualizar o ângulo
+    angle += angular_velocity
+    if angle >= 2 * math.pi:
+        angle -= 2 * math.pi
 
-    glColor3f(1.0, 1.0, 0.0)
-    glPushMatrix()
-    glTranslatef(x, y, 0.0)
-    glutSolidSphere(0.05, 30, 30)
-    glPopMatrix()
+    # Calcular a posição do satélite
+    satellite_x = center_x + radius * math.cos(angle)
+    satellite_y = center_y + radius * math.sin(angle)
 
-def draw_orbit():
-    """Desenha a linha da órbita se habilitada."""
-    if not show_orbit:
-        return
+    # Adicionar o ponto à lista de trajetória
+    orbit_points.append((satellite_x, satellite_y))
+    if len(orbit_points) > 1000:  # Limitar o número de pontos armazenados
+        orbit_points.pop(0)
 
-    glColor3f(0.5, 0.5, 0.5)
-    glBegin(GL_LINE_LOOP)
-    for x, y in orbit_points:
-        glVertex3f(x, y, 0.0)
-    glEnd()
+    # Desenhar na tela
+    screen.fill(BLACK)  # Limpa a tela
 
-def display():
-    global satellite_angle
+    # Desenhar o planeta
+    pygame.draw.circle(screen, PLANET_COLOR, (center_x, center_y), 20)
 
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-    glLoadIdentity()
+    # Desenhar a trajetória da órbita
+    if show_orbit_path:
+        if len(orbit_points) > 1:
+            pygame.draw.lines(screen, WHITE, False, orbit_points, 1)
 
-    # Desenhar objetos
-    draw_planet()
-    draw_orbit()
-    draw_satellite()
+    # Desenhar o satélite
+    pygame.draw.circle(screen, SATELLITE_COLOR, (int(satellite_x), int(satellite_y)), 5)
 
-    glutSwapBuffers()
+    # Atualizar a tela
+    pygame.display.flip()
+    clock.tick(60)
 
-    # Atualizar ângulo do satélite para animação
-    satellite_angle += 0.5
-    if satellite_angle >= 360.0:
-        satellite_angle -= 360.0
-
-def reshape(width, height):
-    glViewport(0, 0, width, height)
-    glMatrixMode(GL_PROJECTION)
-    glLoadIdentity()
-    gluOrtho2D(-1.0, 1.0, -1.0, 1.0)
-    glMatrixMode(GL_MODELVIEW)
-
-def keyboard(key, x, y):
-    global show_orbit
-
-    if key == b'l' or key == b'L':
-        show_orbit = not show_orbit
-    elif key == b'q' or key == b'Q':
-        sys.exit()
-
-    glutPostRedisplay()
-
-def main():
-    global orbit_points
-
-    if not bool(glutInit):
-        raise RuntimeError("A função glutInit não está disponível. Verifique sua instalação do FreeGLUT.")
-    
-    glutInit(sys.argv)
-    glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH)
-    glutInitWindowSize(window_width, window_height)
-    glutCreateWindow(b"Satelite em Orbita")
-
-    init()
-    calculate_orbit(0.5)
-
-    glutDisplayFunc(display)
-    glutReshapeFunc(reshape)
-    glutKeyboardFunc(keyboard)
-    glutIdleFunc(display)
-    glutMainLoop()
-
-if __name__ == "__main__":
-    main()
+# Encerrar Pygame
+pygame.quit()
+sys.exit()
