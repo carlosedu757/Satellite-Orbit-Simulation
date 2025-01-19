@@ -33,6 +33,14 @@ while running:
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_SPACE:  # Tecla para alternar a exibição da órbita
                 show_orbit_path = not show_orbit_path
+            elif event.key == pygame.K_UP:  # Aumentar o raio da órbita
+                radius += 10
+            elif event.key == pygame.K_DOWN:  # Diminuir o raio da órbita
+                radius = max(50, radius - 10)  # Impedir que o raio seja muito pequeno
+
+        elif event.type == pygame.MOUSEWHEEL:  # Alterar a velocidade angular
+            angular_velocity += event.y * 0.002  # Aumentar/diminuir dependendo da direção
+            angular_velocity = max(0.001, angular_velocity)  # Impedir valores negativos ou nulos
 
     # Atualizar o ângulo
     angle += angular_velocity
