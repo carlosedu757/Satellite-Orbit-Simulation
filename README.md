@@ -43,7 +43,7 @@ Durante a execução da simulação, você pode interagir com o programa usando 
 
 ## Captura de Tela 🖼️
 
-![image](https://github.com/user-attachments/assets/e9469cd2-dfa7-4227-b59d-de6d4b466e0e)
+![image](https://github.com/user-attachments/assets/047726bd-67f4-4de8-9223-43cc59e2b1a5)
 
 ## Licença 📜
 
